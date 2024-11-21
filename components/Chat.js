@@ -1,20 +1,47 @@
 import { useState, useEffect } from "react";
 import { GiftedChat } from "react-native-gifted-chat";
 import { StyleSheet, View, Text, KeyboardAvoidingView } from 'react-native';
+import { collection, addDoc, onSnapshot, query, orderBy } from "firebase/firestore";
 
-const Chat = ({ route, navigation }) => {
-   const { name } = route.params; 
+const Chat = ({ route, navigation, db, isConnected, storage }) => {
+   const { username, background, userID } = route.params; 
    const [messages, setMessages] = useState([]);
+   const onSend = (newMessages) => {
+    addDoc(collection(db, "messages"), newMessages[0])
+  }
 
-    //sets name as name typed by user on mainscreen and sets background as user selected background
-  useEffect(() => {
-    navigation.setOptions({ title: name, color: background });
-  }, []);
-
-   useEffect(() => {
-        navigation.setOptions({ title: name });
-   }, []);
  
+ 
+    // useEffect hook to set messages options
+    let unsubMessages;
+    useEffect(() => {
+      if (isConnected === true){
+        // unregister current onSnapshot() listener to avoid registering multiple listeners when
+      // useEffect code is re-executed.
+      if (unsubMessages) unsubMessages();
+      unsubMessages = null;
+        navigation.setOptions({ title: username });
+        // Create a query to get the "messages" collection from the Firestore database
+        const q = query(collection(db, "messages"), orderBy("createdAt", "desc"));
+        // This function will be called whenever there are changes in the collection.
+        unsubMessages = onSnapshot(q, (docs) => {
+          let newMessages = [];
+          // Iterate through each document in the snapshot
+          docs.forEach(doc => {
+            newMessages.push({ id: doc.id, ...doc.data(),  createdAt: new Date(doc.data().createdAt.toMillis()), })
+          });
+          cacheMessages(newMessages);
+          setMessages(newMessages);
+        });
+      } else loadCachedMessages();
+
+        // Clean up code
+        return () => {
+          if (unsubMessages) unsubMessages();
+        }
+      }, [isConnected]); //isConnected used as a dependency value enabling the component to call the callback of useEffect whenewer the isConnected prop's value changes.
+
+
  return (
    <View style={[styles.container, { backgroundColor: background }]}>
      <GiftedChat
