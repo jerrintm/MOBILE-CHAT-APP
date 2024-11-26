@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { GiftedChat } from "react-native-gifted-chat";
 import { StyleSheet, View, Text, KeyboardAvoidingView } from 'react-native';
 import { collection, addDoc, onSnapshot, query, orderBy } from "firebase/firestore";
+import {AsyncStorage} from "@react-native-async-storage/async-storage";
 
 const Chat = ({ route, navigation, db, isConnected, storage }) => {
    const { username, background, userID } = route.params; 
@@ -10,7 +11,24 @@ const Chat = ({ route, navigation, db, isConnected, storage }) => {
     addDoc(collection(db, "messages"), newMessages[0])
   }
 
- 
+  const renderBubble = (props) => {
+    return <Bubble
+      {...props}
+      wrapperStyle={{
+        right: {
+          backgroundColor: "#000"
+        },
+        left: {
+          backgroundColor: "#FFF"
+        }
+      }}
+    />
+  }
+
+  const renderInputToolbar = (props) => {
+    if (isConnected) return <InputToolbar {...props} />;
+    else return null;
+   }
  
     // useEffect hook to set messages options
     let unsubMessages;
@@ -41,6 +59,23 @@ const Chat = ({ route, navigation, db, isConnected, storage }) => {
         }
       }, [isConnected]); //isConnected used as a dependency value enabling the component to call the callback of useEffect whenewer the isConnected prop's value changes.
 
+      const cacheMessages = async (messagesToCache) => {
+        try {
+          await AsyncStorage.setItem(
+            "messages",
+            JSON.stringify(messagesToCache)
+          );
+        } catch (error) {
+          console.log(error.message);
+        }
+      };
+
+       // Call this function when isConnected prop turns out to be false in useEffect()
+       const loadCachedMessages = async () => {
+        // The empty array is for cachedMessages in case AsyncStorage() fails when the messages item hasn’t been set yet in AsyncStorage.
+        const cachedMessages = (await AsyncStorage.getItem("messages")) || [];
+        setMessages(JSON.parse(cachedMessages));
+      };
 
  return (
    <View style={[styles.container, { backgroundColor: background }]}>
@@ -58,7 +93,7 @@ const Chat = ({ route, navigation, db, isConnected, storage }) => {
           />
           { Platform.OS === 'android' ? <KeyboardAvoidingView behavior="height" /> : null }
           {Platform.OS === "ios"?<KeyboardAvoidingView behavior="padding" />: null}
-     <Text>Hello Screen2!</Text>
+     
    </View>
  );
 }
