@@ -22,7 +22,6 @@ import { getStorage } from "firebase/storage";
 const Stack = createNativeStackNavigator();
 
 const App = () => {
-
 // Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyC9CE063a5VV0CWCr1Usr9V471SdabIPG0",
@@ -51,7 +50,7 @@ const firebaseConfig = {
     }
   }, [connectionStatus.isConnected]);
 
-  
+
   return (
     <NavigationContainer>
       <Stack.Navigator
