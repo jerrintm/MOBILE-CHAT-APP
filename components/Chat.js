@@ -10,7 +10,17 @@ const Chat = ({ route, navigation, db, isConnected, storage }) => {
    const { username, background, userID } = route.params; 
    const [messages, setMessages] = useState([]);
    const onSend = (newMessages) => {
-    addDoc(collection(db, "messages"), newMessages[0])
+    console.log(newMessages)
+    
+    addDoc(collection(db, "messages"), {
+      ...newMessages[0],
+      createdAt: new Date(),
+      user: { // Add user information here
+        _id: userID,
+        name: username,
+      },
+    })
+
   }
 
   const renderBubble = (props) => {
@@ -36,7 +46,7 @@ const Chat = ({ route, navigation, db, isConnected, storage }) => {
     // useEffect hook to set messages options
     let unsubMessages;
     useEffect(() => {
-      if (isConnected === true){
+      if (isConnected){
         // unregister current onSnapshot() listener to avoid registering multiple listeners when
       // useEffect code is re-executed.
       if (unsubMessages) unsubMessages();
@@ -49,7 +59,7 @@ const Chat = ({ route, navigation, db, isConnected, storage }) => {
           let newMessages = [];
           // Iterate through each document in the snapshot
           docs.forEach(doc => {
-            newMessages.push({ id: doc.id, ...doc.data(),  createdAt: new Date(doc.data().createdAt.toMillis()), })
+            newMessages.push({ _id: doc.id, ...doc.data(),  createdAt: new Date(doc.data().createdAt.toMillis()), })
           });
           cacheMessages(newMessages);
           setMessages(newMessages);
@@ -81,7 +91,7 @@ const Chat = ({ route, navigation, db, isConnected, storage }) => {
       };
 
       const renderCustomActions = (props) => {
-        return <CustomActions storage={storage} userID={userID} {...props} />;
+        return <CustomActions storage={storage} userID={userID} onSend={onSend} {...props} />;
       };
 
       const renderCustomView = (props) => {
@@ -127,11 +137,11 @@ const Chat = ({ route, navigation, db, isConnected, storage }) => {
 }
 
 const styles = StyleSheet.create({
- container: {
-   flex: 1,
-   justifyContent: 'center',
-   alignItems: 'center'
- }
+  container: {
+    flex: 1,
+   // justifyContent: 'center',
+   // alignItems: 'center'
+  }
 });
 
 export default Chat;

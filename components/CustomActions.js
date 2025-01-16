@@ -32,14 +32,19 @@ const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, storage, userID })
       );
     }
     const uploadAndSendImage = async (imageURI) => {
+      console.log('imageURI', imageURI)
+      console.log('onSend', onSend)
         const uniqueRefString = generateReference(imageURI);
         const newUploadRef = ref(storage, uniqueRefString);
         const response = await fetch(imageURI);
         const blob = await response.blob();
         uploadBytes(newUploadRef, blob).then(async (snapshot) => {
           const imageURL = await getDownloadURL(snapshot.ref)
-          onSend({ image: imageURL })
-        });
+          console.log('imageURL', imageURL)
+          onSend([{ image: imageURL }])
+        }).catch((error)=>{
+          console.log(error)
+        })
       }
     const pickImage = async () => {
         let permissions = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -52,6 +57,7 @@ const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, storage, userID })
       const takePhoto = async () => {
         let permissions = await ImagePicker.requestCameraPermissionsAsync();
         if (permissions?.granted) {
+          console.log('permissions granted')
           let result = await ImagePicker.launchCameraAsync();
           if (!result.canceled) await uploadAndSendImage(result.assets[0].uri);
           else Alert.alert("Permissions haven't been granted.");
@@ -69,12 +75,12 @@ const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, storage, userID })
         if (permissions?.granted) {
           const location = await Location.getCurrentPositionAsync({});
           if (location) {
-            onSend({
+            onSend([{
               location: {
                 longitude: location.coords.longitude,
                 latitude: location.coords.latitude,
               },
-            });
+            }]);
           } else Alert.alert("Error occurred while fetching location");
         } else Alert.alert("Permissions haven't been granted.");
       }

@@ -26,7 +26,7 @@ const Start = ({ navigation }) => {
        style={styles.imageBackground}
      >
      
-     <Text style={styles.title}>ConnectoChat !</Text>
+     <Text style={styles.title}>Chat session !</Text>
        <View style={styles.box}>
          {/* user types name */}
          <TextInput
